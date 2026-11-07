@@ -49,13 +49,18 @@ private fun App() {
         allWords.find { it.en == en }
     }
 
-    BackHandler(enabled = screen !is Screen.Home) {
-        screen = when (screen) {
-            is Screen.Learn -> if (screen.progressKey == "DIFFICULT") Screen.DifficultModeSelect else Screen.Levels(false)
-            is Screen.Quiz -> if (screen.progressKey == "DIFFICULT") Screen.DifficultModeSelect else Screen.Levels(true)
-            is Screen.Levels -> Screen.ModeSelect
-            is Screen.DifficultModeSelect -> Screen.ModeSelect
-            else -> Screen.Home
+    // Сохраняем текущий экран в локальную переменную, чтобы компилятор не ругался
+val currentScreen = screen
+
+BackHandler(enabled = currentScreen !is Screen.Home) {
+    screen = when (currentScreen) {
+        is Screen.Learn -> if (currentScreen.progressKey == "DIFFICULT") Screen.DifficultModeSelect else Screen.Levels(false)
+        is Screen.Quiz -> if (currentScreen.progressKey == "DIFFICULT") Screen.DifficultModeSelect else Screen.Levels(true)
+        is Screen.Levels -> Screen.ModeSelect
+        is Screen.DifficultModeSelect -> Screen.ModeSelect
+        else -> Screen.Home
+    }
+}
         }
     }
 
