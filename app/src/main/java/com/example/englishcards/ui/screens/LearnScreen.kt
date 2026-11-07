@@ -1,8 +1,11 @@
 package com.example.englishcards.ui.screens
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -86,10 +89,15 @@ fun LearnScreen(words: List<Word>, title: String, progressKey: String, prefs: Pr
                 val word = shuffledWords[index]
                 Text("${index + 1} из $total", color = Color(0xFF6E6A75), fontSize = 14.sp)
                 Spacer(Modifier.height(8.dp))
-                LinearProgressIndicator(progress = { index.toFloat() / total }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), color = Turquoise, trackColor = Color(0xFFE6DDF0))
+                LinearProgressIndicator(
+                    progress = { index.toFloat() / total }, 
+                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), 
+                    color = Turquoise, 
+                    trackColor = Color(0xFFE6DDF0)
+                )
                 Spacer(Modifier.height(24.dp))
 
-                // --- ПЛАВНАЯ АНИМАЦИЯ (FADE) ---
+                // --- КАРТОЧКА С АНИМАЦИЕЙ СДВИГА ---
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -98,25 +106,30 @@ fun LearnScreen(words: List<Word>, title: String, progressKey: String, prefs: Pr
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
-                    Crossfade(
-                        targetState = revealed,
-                        animationSpec = tween(durationMillis = 300),
-                        label = "card_fade"
-                    ) { isRevealed ->
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            if (!isRevealed) {
-                                Text(word.en, fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Purple, textAlign = TextAlign.Center)
-                            } else {
-                                Text(word.ru, fontSize = 30.sp, color = Color(0xFF1F1B24), textAlign = TextAlign.Center)
+                    Box(Modifier.fillMaxSize()) {
+                        AnimatedContent(
+                            targetState = revealed,
+                            transitionSpec = {
+                                (slideInHorizontally(initialOffsetX = { it }) + fadeIn()) togetherWith
+                                (slideOutHorizontally(targetOffsetX = { -it }) + fadeOut())
+                            },
+                            label = "card_slide"
+                        ) { isRevealed ->
+                            Column(
+                                modifier = Modifier.fillMaxSize().padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                if (!isRevealed) {
+                                    Text(word.en, fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Purple, textAlign = TextAlign.Center)
+                                } else {
+                                    Text(word.ru, fontSize = 30.sp, color = Color(0xFF1F1B24), textAlign = TextAlign.Center)
+                                }
                             }
                         }
                     }
                 }
-                // -----------------------------
+                // -----------------------------------
 
                 Spacer(Modifier.weight(1f))
 
