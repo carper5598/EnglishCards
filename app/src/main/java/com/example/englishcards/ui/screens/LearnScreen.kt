@@ -1,6 +1,6 @@
 package com.example.englishcards.ui.screens
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -90,45 +89,28 @@ fun LearnScreen(words: List<Word>, title: String, progressKey: String, prefs: Pr
                 LinearProgressIndicator(progress = { index.toFloat() / total }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), color = Turquoise, trackColor = Color(0xFFE6DDF0))
                 Spacer(Modifier.height(24.dp))
 
-                // --- 3D АНИМАЦИЯ КАРТОЧКИ ---
-                val rotation by animateFloatAsState(
-                    targetValue = if (revealed) 180f else 0f,
-                    animationSpec = tween(durationMillis = 400),
-                    label = "card_rotation"
-                )
-
+                // --- ПЛАВНАЯ АНИМАЦИЯ (FADE) ---
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(320.dp)
-                        .graphicsLayer {
-                            rotationY = rotation
-                            cameraDistance = 12f * density
-                        },
+                        .height(320.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
-                    Box(Modifier.fillMaxSize()) {
-                        // Лицевая сторона (Английский)
-                        if (rotation <= 90f) {
-                            Column(
-                                modifier = Modifier.fillMaxSize().padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
+                    Crossfade(
+                        targetState = revealed,
+                        animationSpec = tween(durationMillis = 300),
+                        label = "card_fade"
+                    ) { isRevealed ->
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            if (!isRevealed) {
                                 Text(word.en, fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Purple, textAlign = TextAlign.Center)
-                            }
-                        } else {
-                            // Задняя сторона (Русский) - переворачиваем текст обратно
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(24.dp)
-                                    .graphicsLayer { rotationY = 180f },
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
+                            } else {
                                 Text(word.ru, fontSize = 30.sp, color = Color(0xFF1F1B24), textAlign = TextAlign.Center)
                             }
                         }
