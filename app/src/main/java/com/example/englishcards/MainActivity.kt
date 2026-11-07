@@ -35,8 +35,8 @@ private sealed interface Screen {
     data object DifficultModeSelect : Screen
     data object MyWords : Screen
     data class Levels(val isQuiz: Boolean) : Screen
-    data class Learn(val words: List<Word>, val title: String, val progressKey: String) : Screen
-    data class Quiz(val words: List<Word>, val title: String, val progressKey: String) : Screen
+    data class Learn(val words: List<Word>, val title: String, val origin: String) : Screen
+    data class Quiz(val words: List<Word>, val title: String, val origin: String) : Screen
     data class CustomWordsPlay(val isQuiz: Boolean) : Screen
 }
 
@@ -49,16 +49,18 @@ private fun App() {
 
     val allWords = LEVELS.flatMap { it.words }
     val difficultWords = prefs.getDifficultWords().mapNotNull { en -> allWords.find { it.en == en } }
-    
-    // Получаем актуальный список своих слов при переходе на экран
     val myWords = remember(screen) { customWordsManager.getCustomWords() }
 
     val currentScreen = screen
 
     BackHandler(enabled = currentScreen !is Screen.Home) {
         screen = when (currentScreen) {
-            is Screen.Learn -> if (currentScreen.progressKey == "DIFFICULT") Screen.DifficultModeSelect else Screen.Levels(false)
-            is Screen.Quiz -> if (currentScreen.progressKey == "DIFFICULT") Screen.DifficultModeSelect else Screen.Levels(true)
+            is Screen.Learn -> when(currentScreen.origin) { 
+                "DIFFICULT" -> Screen.DifficultModeSelect; "CUSTOM" -> Screen.MyWords; else -> Screen.Levels(false) 
+            }
+            is Screen.Quiz -> when(currentScreen.origin) { 
+                "DIFFICULT" -> Screen.DifficultModeSelect; "CUSTOM" -> Screen.MyWords; else -> Screen.Levels(true) 
+            }
             is Screen.Levels -> Screen.ModeSelect
             is Screen.DifficultModeSelect -> Screen.ModeSelect
             is Screen.MyWords -> Screen.ModeSelect
@@ -99,31 +101,23 @@ private fun App() {
         is Screen.Levels -> LevelsScreen(
             onLevelClick = { i -> 
                 val level = LEVELS[i]
-                if (s.isQuiz) screen = Screen.Quiz(level.words, "Квиз · ${level.code}", level.code)
-                else screen = Screen.Learn(level.words, "${level.code} · ${level.title}", level.code)
+                if (s.isQuiz) screen = Screen.Quiz(level.words, "Квиз · ${level.code}", "LEVEL")
+                else screen = Screen.Learn(level.words, "${level.code} · ${level.title}", "LEVEL")
             },
             onBack = { screen = Screen.ModeSelect }
         )
         
         is Screen.Learn -> LearnScreen(
-            words = s.words, title = s.title, progressKey = s.progressKey, prefs = prefs,
+            words = s.words, title = s.title, prefs = prefs,
             onBack = { 
-                screen = when(s.progressKey) {
-                    "DIFFICULT" -> Screen.DifficultModeSelect
-                    "CUSTOM" -> Screen.MyWords
-                    else -> Screen.Levels(false)
-                }
+                screen = when(s.origin) { "DIFFICULT" -> Screen.DifficultModeSelect; "CUSTOM" -> Screen.MyWords; else -> Screen.Levels(false) }
             }
         )
         
         is Screen.Quiz -> QuizScreen(
-            words = s.words, title = s.title, progressKey = s.progressKey, prefs = prefs,
+            words = s.words, title = s.title, prefs = prefs,
             onBack = { 
-                screen = when(s.progressKey) {
-                    "DIFFICULT" -> Screen.DifficultModeSelect
-                    "CUSTOM" -> Screen.MyWords
-                    else -> Screen.Levels(true)
-                }
+                screen = when(s.origin) { "DIFFICULT" -> Screen.DifficultModeSelect; "CUSTOM" -> Screen.MyWords; else -> Screen.Levels(true) }
             }
         )
     }
