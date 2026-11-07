@@ -1,11 +1,6 @@
 package com.example.englishcards.ui.screens
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -26,32 +21,13 @@ import com.example.englishcards.ui.theme.Turquoise
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LearnScreen(words: List<Word>, title: String, progressKey: String, prefs: PreferencesManager, onBack: () -> Unit) {
+fun LearnScreen(words: List<Word>, title: String, prefs: PreferencesManager, onBack: () -> Unit) {
     val shuffledWords = remember(words) { words.shuffled() }
-    var index by rememberSaveable(progressKey) { mutableStateOf(prefs.getProgress(progressKey)) }
-    var revealed by rememberSaveable(progressKey) { mutableStateOf(false) }
-    var showResetDialog by remember { mutableStateOf(false) }
+    var index by rememberSaveable { mutableStateOf(0) }
+    var revealed by rememberSaveable { mutableStateOf(false) }
 
     val total = shuffledWords.size
     val finished = index >= total || total == 0
-
-    LaunchedEffect(index) {
-        if (index < total) prefs.saveProgress(progressKey, index)
-    }
-
-    if (showResetDialog) {
-        AlertDialog(
-            onDismissRequest = { showResetDialog = false },
-            title = { Text("Сбросить прогресс?") },
-            text = { Text("Вы уверены, что хотите начать этот раздел заново?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    prefs.resetProgress(progressKey); index = 0; revealed = false; showResetDialog = false
-                }) { Text("Уверен", color = Color.Red) }
-            },
-            dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text("Отмена") } }
-        )
-    }
 
     Scaffold(
         topBar = {
@@ -61,11 +37,14 @@ fun LearnScreen(words: List<Word>, title: String, progressKey: String, prefs: Pr
                 actions = {
                     if (!finished) {
                         val currentWord = shuffledWords[index]
-                        var isDiff by remember { mutableStateOf(prefs.isDifficult(currentWord.en)) }
-                        IconButton(onClick = { prefs.toggleDifficultWord(currentWord.en); isDiff = !isDiff }) {
+                        // ФИКС ЗВЕЗДОЧКИ: remember(currentWord.en) заставляет её обновляться при смене слова
+                        var isDiff by remember(currentWord.en) { mutableStateOf(prefs.isDifficult(currentWord.en)) }
+                        IconButton(onClick = { 
+                            prefs.toggleDifficultWord(currentWord.en)
+                            isDiff = !isDiff 
+                        }) {
                             Text(if (isDiff) "⭐" else "☆", fontSize = 24.sp, color = Color.White)
                         }
-                        IconButton(onClick = { showResetDialog = true }) { Text("↺", fontSize = 26.sp, color = Color.White, fontWeight = FontWeight.Bold) }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple, titleContentColor = Color.White)
@@ -92,44 +71,32 @@ fun LearnScreen(words: List<Word>, title: String, progressKey: String, prefs: Pr
                 LinearProgressIndicator(
                     progress = { index.toFloat() / total }, 
                     modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), 
-                    color = Turquoise, 
-                    trackColor = Color(0xFFE6DDF0)
+                    color = Turquoise, trackColor = Color(0xFFE6DDF0)
                 )
                 Spacer(Modifier.height(24.dp))
 
-                // --- КАРТОЧКА С АНИМАЦИЕЙ СДВИГА ---
+                // ПРОСТАЯ КАРТОЧКА БЕЗ АНИМАЦИЙ
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(320.dp),
+                    modifier = Modifier.fillMaxWidth().height(320.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
-                    Box(Modifier.fillMaxSize()) {
-                        AnimatedContent(
-                            targetState = revealed,
-                            transitionSpec = {
-                                (slideInHorizontally(initialOffsetX = { it }) + fadeIn()) togetherWith
-                                (slideOutHorizontally(targetOffsetX = { -it }) + fadeOut())
-                            },
-                            label = "card_slide"
-                        ) { isRevealed ->
-                            Column(
-                                modifier = Modifier.fillMaxSize().padding(24.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                if (!isRevealed) {
-                                    Text(word.en, fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Purple, textAlign = TextAlign.Center)
-                                } else {
-                                    Text(word.ru, fontSize = 30.sp, color = Color(0xFF1F1B24), textAlign = TextAlign.Center)
-                                }
-                            }
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(word.en, fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Purple, textAlign = TextAlign.Center)
+                        
+                        if (revealed) {
+                            Spacer(Modifier.height(20.dp))
+                            Box(Modifier.width(80.dp).height(3.dp).background(Turquoise, RoundedCornerShape(2.dp)))
+                            Spacer(Modifier.height(20.dp))
+                            Text(word.ru, fontSize = 30.sp, color = Color(0xFF1F1B24), textAlign = TextAlign.Center)
                         }
                     }
                 }
-                // -----------------------------------
 
                 Spacer(Modifier.weight(1f))
 
