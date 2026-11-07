@@ -17,7 +17,7 @@ import com.example.englishcards.ui.theme.PurpleLight
 import com.example.englishcards.ui.theme.Turquoise
 
 @Composable
-fun ModeScreen(onCardsClick: () -> Unit, onQuizClick: () -> Unit, onBack: () -> Unit) {
+fun ModeScreen(onCardsClick: () -> Unit, onQuizClick: () -> Unit, onDifficultClick: () -> Unit, onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -32,12 +32,7 @@ fun ModeScreen(onCardsClick: () -> Unit, onQuizClick: () -> Unit, onBack: () -> 
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                "Как будем учиться?",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+            Text("Как будем учиться?", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(Modifier.height(40.dp))
             
             Button(
@@ -49,7 +44,7 @@ fun ModeScreen(onCardsClick: () -> Unit, onQuizClick: () -> Unit, onBack: () -> 
                 Text("📚 Карточки", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
             
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
             
             Button(
                 onClick = onQuizClick,
@@ -58,6 +53,17 @@ fun ModeScreen(onCardsClick: () -> Unit, onQuizClick: () -> Unit, onBack: () -> 
                 colors = ButtonDefaults.buttonColors(containerColor = Turquoise, contentColor = Color.White)
             ) {
                 Text("🎯 Квиз (Тест)", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick = onDifficultClick,
+                modifier = Modifier.fillMaxWidth().height(64.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800), contentColor = Color.White)
+            ) {
+                Text("⭐ Сложные слова", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
