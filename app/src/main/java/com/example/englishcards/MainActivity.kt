@@ -47,9 +47,14 @@ private fun App() {
     val customWordsManager = remember { CustomWordsManager(context) }
     var screen by remember { mutableStateOf<Screen>(Screen.Home) }
 
-    val allWords = LEVELS.flatMap { it.words }
-    val difficultWords = prefs.getDifficultWords().mapNotNull { en -> allWords.find { it.en == en } }
+    // Получаем актуальный список своих слов при переходе на экран
     val myWords = remember(screen) { customWordsManager.getCustomWords() }
+
+    // ФИКС: Теперь ищем сложные слова и в базовых уровнях, и в своих добавленных
+    val allAvailableWords = LEVELS.flatMap { it.words } + myWords
+    val difficultWords = prefs.getDifficultWords().mapNotNull { en -> 
+        allAvailableWords.find { it.en == en } 
+    }
 
     val currentScreen = screen
 
