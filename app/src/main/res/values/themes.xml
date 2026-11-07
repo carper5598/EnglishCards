@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.EnglishCards" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#6A1B9A</item>
+        <item name="android:navigationBarColor">#FFFFFF</item>
+    </style>
+</resources>
